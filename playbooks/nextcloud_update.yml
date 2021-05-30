@@ -13,7 +13,7 @@
     
   tasks:
   
-  - name: Register hostname
+  - name: Register hostname #Can be used for conditionals further in playbook, if needed.
     shell: hostname
     register: hostname
     args:
