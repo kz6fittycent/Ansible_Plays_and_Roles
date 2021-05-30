@@ -2,7 +2,7 @@
 # remote host
 
 
-- hosts: all
+- hosts: NEXTCLOUD
   become: true
   become_method: sudo
   ignore_unreachable: true
@@ -23,8 +23,6 @@
     shell: '{{ occ }}/updater/updater.phar -q -n'
     args:
       warn: no
-    when:
-      - hostname.stdout == "metroplex"  
       
   - name: Set maintenance mode to off
     shell: '{{ occ }}/occ maintenance:mode --off'
