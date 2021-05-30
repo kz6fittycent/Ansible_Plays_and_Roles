@@ -1,0 +1,32 @@
+# Simple playbook to keep your NC installation updated w/o using the webUI or ssh'ing into
+# remote host
+
+
+- hosts: all
+  become: true
+  become_method: sudo
+  ignore_unreachable: true
+  
+  vars:
+    occ: "sudo -u www-data php /var/www/nextcloud"
+    #Provide path for your setup here
+    
+  tasks:
+  
+  - name: Register hostname
+    shell: hostname
+    register: hostname
+    args:
+      warn: no 
+ 
+  - name: Upgrade NC
+    shell: '{{ occ }}/updater/updater.phar -q -n'
+    args:
+      warn: no
+    when:
+      - hostname.stdout == "metroplex"  
+      
+  - name: Set maintenance mode to off
+    shell: '{{ occ }}/occ maintenance:mode --off'
+    args:
+      warn: no
