@@ -9,7 +9,8 @@
   
   vars:
     occ: "sudo -u www-data php /var/www/nextcloud"
-    #Provide path for your setup here. Note: Typically, sudo is not used, but for occ to work as expected, it was required.
+    #Provide path for your setup here. 
+    #Note: Typically, sudo is not used, but for occ to work as expected, it was required.
     
   tasks:
   
