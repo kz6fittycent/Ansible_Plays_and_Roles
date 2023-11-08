@@ -1,0 +1,87 @@
+---
+  - name: Install EPEL for RHEL8
+    shell: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -yy'
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "8"
+      - goodies_enabled
+      
+  - name: Download & install EPEL RPM for RHEL7
+    shell: |
+      cd /tmp
+      wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      yum install epel-release-latest-7.noarch.rpm -yy
+    when: 
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "7"
+      - epel_installed.rc != 0      
+      - goodies_enabled
+    args:
+      warn: no  
+            
+  - name: Remove the EPEL RPM from RHEL7 host's /tmp
+    file:
+      path: /tmp/epel-release-latest-7.noarch.rpm
+      state: absent
+    when: 
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "7"
+      - epel_installed.rc != 0      
+      - goodies_enabled
+      
+  - name: Install extra goodies
+    package:
+      name: '{{ goodies_list }}'
+    when:
+      - goodies_enabled
+      
+  - name: Enable snapd
+    systemd:
+      name: snapd.socket
+      enabled: yes
+      state: started
+    when:
+      - goodies_enabled
+      
+  - name: Create symbolic link for classic snap support
+    file:
+      src: /var/lib/snapd/snap 
+      dest: /snap
+      state: link
+    when:
+      - goodies_enabled
+      
+  - name: Install specific snaps
+    snap: 
+      name: '{{ snap_list }}'
+      channel: stable
+      state: present
+    when:
+      - goodies_enabled      
+    
+  - name: Snap connections for btop
+    command: "snap connect {{ item }}"
+    changed_when: false    
+    with_items:
+      - btop:mount-observe
+      - btop:network-observe
+      - btop:hardware-observe
+      - btop:system-observe
+      - btop:process-control   
+      - btop:network-observe  
+    when:
+      - goodies_enabled
+            
+  - name: Snap connections for bashtop
+    command: "snap connect {{ item }}"
+    changed_when: false    
+    with_items:
+      - bashtop:mount-observe
+      - bashtop:network-observe
+      - bashtop:hardware-observe
+      - bashtop:system-observe
+      - bashtop:process-control
+    when:
+      - goodies_enabled      
+            
+            

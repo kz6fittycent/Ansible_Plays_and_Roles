@@ -1,0 +1,120 @@
+- hosts: REPOS
+  remote_user: ansible
+  become: true
+  become_method: sudo
+  tasks:
+    
+    - name: Yum update
+      package:
+        name: "*"
+        state: latest
+        
+    - name: Install lsb_release
+      package:
+        name: redhat-lsb-core
+        state: present
+        
+    - name: Register lsb_release -is output
+      shell: lsb_release -is
+      register: output
+
+    - name: Install Apache
+      package:
+        name: httpd
+        state: present
+
+    - name: Install createrepo
+      package:
+        name: 
+          - createrepo
+          - yum-utils
+        state: present
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7"
+                
+    - name: Create repos directory
+      file: 
+        path: /var/www/html/RHN/
+        state: directory
+        
+    - name: Run reposync - RHEL 7 server
+      command: reposync --newest-only --gpgcheck --download-metadata --downloadcomps --download_path=/var/www/html/RHN --repoid=rhel-7-server-rpms
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7"
+        - output.stdout == "RedHatEnterpriseServer"
+      args:
+        warn: no
+                
+    - name: Run createrepo - RHEL 7 server
+      command: createrepo -v -g comps.xml /var/www/html/RHN/rhel-7-server-rpms
+      when: 
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7"
+        - output.stdout == "RedHatEnterpriseServer"
+      args:
+        warn: no
+
+    - name: Run reposync - RHEL 7 workstation
+      command: reposync --newest-only --gpgcheck --download-metadata --downloadcomps --download_path=/var/www/html/RHN --repoid=rhel-7-workstation-rpms
+      when: 
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7"
+        - output.stdout == "RedHatEnterpriseWorkstation"
+      args:
+        warn: no
+        
+    - name: Run createrepo - RHEL 7 workstation
+      command: createrepo -v -g comps.xml /var/www/html/RHN/rhel-7-workstation-rpms
+      when: 
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7"
+        - output.stdout == "RedHatEnterpriseWorkstation"
+      args:
+        warn: no        
+
+    - name: Run reposync - RHEL 8 - Appstream
+      command: reposync --newest-only --download-metadata --downloadcomps -p=/var/www/html/RHN --repoid=rhel-8-for-x86_64-appstream-rpms
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no
+        
+    - name: Run reposync - RHEL 8 - Base
+      command: reposync --newest-only --download-metadata --downloadcomps -p=/var/www/html/RHN --repoid=rhel-8-for-x86_64-baseos-rpms
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no
+
+    - name: Run createrepo - RHEL 8 Appstream
+      command: createrepo -v --update /var/www/html/RHN/rhel-8-for-x86_64-appstream-rpms     
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no
+        
+    - name: Run createrepo - RHEL 8 Base
+      command: createrepo -v --update /var/www/html/RHN/rhel-8-for-x86_64-baseos-rpms     
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no
+        
+
+        
+
+        
+
+
+        
+  

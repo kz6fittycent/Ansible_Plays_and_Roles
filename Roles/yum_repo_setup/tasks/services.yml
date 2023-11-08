@@ -1,0 +1,9 @@
+---
+
+  - name: Enable & start Apache
+    systemd:
+      name: httpd
+      enabled: yes
+      state: started
+      masked: no
+

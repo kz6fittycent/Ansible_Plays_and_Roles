@@ -1,0 +1,29 @@
+---
+  - name: Update everything
+    package:
+      name: "*"
+      state: latest
+
+  - name: Install needed packages
+    package:
+      name: 
+        - redhat-lsb-core
+        - httpd
+        - createrepo
+        - yum-utils  
+        - openssh-server
+        - openssh-clients 
+        - python3
+        - python3-pip
+        - wget     
+      state: latest
+      
+  - name: Install mod_ssl if applicable
+    package:
+      name:
+        - mod_ssl
+      state: latest
+    when:
+      - https_enabled or snakeoil_enabled
+      
+  

@@ -1,0 +1,7 @@
+---
+rhel_repo: true
+https_enabled: false
+epel_enabled: false
+selinux_enabled: false
+snakeoil_enabled: false
+goodies_enabled: true 

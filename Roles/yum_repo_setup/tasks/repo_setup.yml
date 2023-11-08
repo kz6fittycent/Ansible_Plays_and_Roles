@@ -1,0 +1,77 @@
+---
+   
+  - name: Run reposync - RHEL 7 server
+    command: '{{ reposync7server }}'
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "7"
+      - system.stdout == "RedHatEnterpriseServer"
+      - rhel_repo
+    args:
+      warn: no
+                
+  - name: Run createrepo - RHEL 7 server
+    command: '{{ crepo_server7 }}'
+    when: 
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "7"
+      - system.stdout == "RedHatEnterpriseServer"
+      - rhel_repo      
+    args:
+      warn: no
+
+  - name: Run reposync - RHEL 7 workstation
+    command: '{{ reposync7workstation }}'
+    when: 
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "7"
+      - system.stdout == "RedHatEnterpriseWorkstation"
+      - rhel_repo      
+    args:
+      warn: no
+        
+  - name: Run createrepo - RHEL 7 workstation
+    command: '{{ crepo_workstation7 }}'  
+    when: 
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "7"
+      - system.stdout == "RedHatEnterpriseWorkstation"
+      - rhel_repo     
+    args:
+      warn: no        
+
+  - name: Run reposync - RHEL 8 - Appstream
+    command: '{{ reposync8app }}'  
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "8"
+      - rhel_repo      
+    args:
+      warn: no
+        
+  - name: Run reposync - RHEL 8 - Base
+    command: '{{ reposync8base }}'  
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "8"
+      - rhel_repo
+    args:
+      warn: no
+
+  - name: Run createrepo - RHEL 8 Appstream
+    command: '{{ crepo8app }}'     
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "8"
+      - rhel_repo      
+    args:
+      warn: no
+        
+  - name: Run createrepo - RHEL 8 Base
+    command: '{{ crepo8base }}'    
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "8"
+      - rhel_repo      
+    args:
+      warn: no              

@@ -1,0 +1,60 @@
+---
+repo_path: "/var/www/html/RHN" 
+# Change the path to your repo to suite your configuration
+# The path will populate throughout each part of the role that
+# references it.
+
+# RHEL7
+reposync7server: "reposync --newest-only --gpgcheck --download-metadata --downloadcomps --download_path={{ repo_path }} --repoid=rhel-7-server-rpms"
+reposync7workstation: "reposync --newest-only --gpgcheck --download-metadata --downloadcomps --download_path={{ repo_path }} --repoid=rhel-7-workstation-rpms"
+
+crepo_server7: "createrepo -g comps.xml {{ repo_path }}/rhel-7-server-rpms"
+crepo_workstation7: "createrepo -g comps.xml {{ repo_path }}/rhel-7-workstation-rpms"
+
+# RHEL8
+reposync8app: "reposync --newest-only --download-metadata --downloadcomps -p={{ repo_path }} --repoid=rhel-8-for-x86_64-appstream-rpms"
+reposync8base: "reposync --newest-only --download-metadata --downloadcomps -p={{ repo_path }} --repoid=rhel-8-for-x86_64-baseos-rpms"
+
+crepo8app: "createrepo --update {{ repo_path }}/rhel-8-for-x86_64-appstream-rpms"
+crepo8base: "createrepo --update {{ repo_path }}/rhel-8-for-x86_64-baseos-rpms"
+
+# Use the following if an EPEL repo is deployed for RHEL7/8
+reposync7epel: "reposync --newest-only --download-metadata --downloadcomps --download_path={{ repo_path }}/epel --repoid=epel"
+crepo_epel7: "createrepo -g comps.xml {{ repo_path }}/epel"
+epel7gpg: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7"
+crepo_epel8: "createrepo --update {{ repo_path }}/epel"
+reposync8epel: "reposync --newest-only --download-metadata --downloadcomps -p={{ repo_path }} --repoid=epel"
+epel8gpg: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-8"
+
+# Location of SSL certificates to be deployed (if necessary)
+ssl_path: "/etc/ssl/crt" # confirm location
+ssl_size: "4096"
+ssl_type: "RSA"
+ssl_cert: "{{ ssl_path }}/ssl.crt" # confirm location
+ssl_chain: "{{ ssl_path }}/ssl.chain" # confirm location
+ssl_key: "{{ ssl_path }}/ssl.key" # confirm location
+ssl_csr: "{{ ssl_path }}/ssl.csr" # confirm location
+ssl_cn: "US" # confirm country name
+ssl_email: "roger_ramjet@email.com" # confirm email
+ssl_org: "ramjets-r-us" # confirm org name
+cyper_settings: "EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4" # recommended settings, but change to suit needs/use-case
+
+# Webserver info
+servername: "repo" # change to correct name
+serveralias: "repo" # change to correct name
+perms: '0755' # change to appropriate permissions
+
+# Extra goodies that come from EPEL - add more to the list, if desired
+goodies_list:
+  - htop
+  - ncdu
+  - ansible
+  - nmap
+  - screen
+  - tmux
+  - snapd
+# Snaps to install when goodies are enabled
+snap_list:
+  - btop
+  - bashtop
+  - speedtest-cli

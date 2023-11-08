@@ -1,0 +1,26 @@
+---
+
+  - name: Register hostname
+    shell: hostname
+    register: hostname
+    args:
+      warn: no
+      
+  - name: Register system type
+    shell: lsb_release -i | awk '{print $3}'
+    register: system
+    args:
+      warn: no  
+      
+  - name: "Check if EPEL is installed"
+    shell: rpm -qa | grep -i "epel-release"
+    register: epel_installed
+    ignore_errors: True
+    check_mode: False
+    changed_when: False
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "7" 
+      - goodies_enabled or epel_enabled   
+    args:
+      warn: no      

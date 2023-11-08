@@ -1,0 +1,106 @@
+---
+
+  - name: Create site-available directory
+    file:
+      path: /etc/httpd/sites-available/
+      state: directory
+      owner: apache
+      group: apache
+      mode: '{{ perms }}'
+    when:
+      - rhel_repo or epel_enabled      
+              
+  - name: Create repo.conf
+    file:
+      path: /etc/httpd/sites-available/repo.conf
+      state: touch
+    when:
+      - rhel_repo or epel_enabled
+      
+  - name: Add configurations to repo.conf (http)
+    blockinfile:
+      path: /etc/httpd/sites-available/repo.conf
+      content: "<VirtualHost *:80>
+        ServerName {{ servername }}
+        ServerAlias {{ repo_path }}
+        DocumentRoot {{ repo_path }}
+        </VirtualHost>"
+    when:
+      - not https_enabled or not snakeoil_enabled
+      - rhel_repo or epel_enabled
+              
+  - name: Add configurations to repo.conf (https)
+    blockinfile:
+      path: /etc/httpd/sites-available/repo.conf
+      content: "<VirtualHost *:443>
+        ServerName {{ servername }}
+        ServerAlias {{ serveralias }}
+        DocumentRoot {{ repo_path }}
+        SSLCertificateFile {{ ssl_cert }}
+        SSLCertificateChainFile {{ ssl_chain }}
+        SSLCertificateKeyFile {{ ssl_key }}
+        SSLEngine On
+        SSLProtocol all -SSLv2 -SSLv3
+        SSLCipherSuite {{ cipher_settings }}
+        </VirtualHost>"        
+    when:
+      - https_enabled
+      
+  - name: Add configurations to repo.conf (snakeoil)
+    blockinfile:
+      path: /etc/httpd/sites-available/repo.conf
+      content: "<VirtualHost *:443>
+        ServerName {{ servername }}
+        ServerAlias {{ serveralias }}
+        DocumentRoot {{ repo_path }}
+        SSLCertificateFile {{ ssl_cert }}
+        SSLCertificateChainFile {{ ssl_chain }}
+        SSLCertificateKeyFile {{ ssl_key }}
+        SSLEngine On  
+        </VirtualHost>"            
+    when:
+      - snakeoil_enabled
+            
+  - name: Create site-enabled directory
+    file:
+      path: /etc/httpd/sites-enabled/
+      state: directory
+      owner: apache
+      group: apache
+      mode: '{{ perms }}'
+    when:
+      - rhel_repo or epel_enabled      
+            
+  - name: Copy repo.conf to sites-enabled
+    copy:
+      src: /etc/httpd/sites-available/repo.conf
+      dest: /etc/httpd/sites-enabled/repo.conf
+      remote_src: yes
+    when:
+      - rhel_repo or epel_enabled      
+    
+  - name: Check if "Welcome" page exists
+    stat:
+      path: /etc/httpd/conf.d/welcome.conf
+    register: welcome_result
+    
+  - name: Remove "Welcome" page
+    file:
+      path: /etc/httpd/conf.d/welcome.conf
+      state: absent
+    when:
+      - welcome_result.stat.exists == True
+      
+  - name: Create repos directory
+    file: 
+      path: '{{ repo_path }}'
+      state: directory
+    when:
+      - rhel_repo or epel_enabled      
+
+  - name: Restart Apache
+    systemd:
+      name: httpd
+      state: restarted  
+    when:
+      - rhel_repo or epel_enabled          

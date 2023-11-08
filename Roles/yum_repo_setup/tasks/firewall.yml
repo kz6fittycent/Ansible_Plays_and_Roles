@@ -1,0 +1,31 @@
+---
+
+  - name: Open port 80 - RHEL 7 & 8
+    firewalld:
+      port: 80/tcp
+      zone: public
+      permanent: yes
+      immediate: yes
+      state: enabled
+    when:
+      - not https_enabled or not snakeoil_enabled
+          
+  - name: Open port 443 - RHEL 7 & 8
+    firewalld:
+      port: 443/tcp
+      zone: public
+      permanent: yes
+      immediate: yes
+      state: enabled
+    when:
+      - https_enabled or snakeoil_enabled
+      
+  - name: Disable port 80 if https_enabled
+    firewalld:
+      port: 80/tcp
+      zone: public
+      permanent: yes
+      immediate: yes
+      state: disabled
+    when:
+      - https_enabled or snakeoil_enabled

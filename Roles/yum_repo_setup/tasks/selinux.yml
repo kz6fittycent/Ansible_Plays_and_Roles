@@ -1,0 +1,31 @@
+---
+      
+  - name: Install libsemanage-python - RHEL 7
+    package:
+      name: libsemanage-python
+      state: present
+    when: 
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "7" 
+      
+  - name: Install policycoreutils-python-utils - RHEL 8
+    package:
+      name: policycoreutils-python-utils
+      state: present
+    when: 
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "8"       
+
+  - name: Enable SELinux (if applicable)
+    selinux:
+      policy: targeted
+      state: enforcing
+    when:
+      - selinux_enabled
+      
+  - name: Disable SELinux (if applicable)
+    selinux:
+      state: disabled
+    when:
+      - selinux_enabled    
+   

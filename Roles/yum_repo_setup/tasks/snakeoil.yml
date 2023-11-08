@@ -1,0 +1,45 @@
+---
+  - name: Install openssl related packages
+    package:
+      name: 
+        - openssl
+        - python3-cryptography
+      state: latest
+    when:
+      - snakeoil_enabled
+  
+  - name: Create SSL directory
+    file:
+      path: '{{ ssl_path }}'
+      state: directory
+      mode: '0775'
+    when:
+      - snakeoil_enabled      
+     
+  - name: Generate private key
+    openssl_privatekey: 
+      path: '{{ ssl_key }}'  
+      size: '{{ ssl_size }}'        
+      type: '{{ ssl_type }}' 
+    when:
+      - snakeoil_enabled 
+      
+  - name: Generate CSR
+    openssl_csr:
+      path: '{{ ssl_csr }}'
+      privatekey_path: '{{ ssl_key }}'
+      common_name: '{{ servername }}'
+      country_name: '{{ ssl_cn }}'
+      email_address: '{{ ssl_email }}'
+      organization_name: '{{ ssl_org }}'  
+    when:
+      - snakeoil_enabled 
+      
+  - name: Generate self-signed certificate
+    openssl_certificate:
+      path: '{{ ssl_cert }}'
+      privatekey_path: '{{ ssl_key }}'      
+      csr_path: '{{ ssl_csr }}'
+      provider: selfsigned
+    when:
+      - snakeoil_enabled       

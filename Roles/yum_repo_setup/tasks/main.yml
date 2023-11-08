@@ -1,0 +1,30 @@
+---
+  - import_tasks: prelims.yml
+    become: yes
+    
+  - import_tasks: packages.yml 
+    become: yes
+  
+  - import_tasks: apache.yml
+    become: yes
+ 
+  - import_tasks: repo_setup.yml
+    become: yes
+
+  - import_tasks: epel.yml
+    become: yes
+    
+  - import_tasks: snakeoil.yml
+    become: yes
+    
+  - import_tasks: firewall.yml
+    become: yes
+    
+  - import_tasks: services.yml
+    become: yes
+    
+  - import_tasks: selinux.yml
+    become: yes
+    
+  - import_tasks: goodies.yml
+    become: yes
