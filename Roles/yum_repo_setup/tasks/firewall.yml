@@ -1,6 +1,6 @@
 ---
 
-  - name: Open port 80 - RHEL 7 & 8
+  - name: Open port 80
     firewalld:
       port: 80/tcp
       zone: public
@@ -10,7 +10,7 @@
     when:
       - not https_enabled or not snakeoil_enabled
           
-  - name: Open port 443 - RHEL 7 & 8
+  - name: Open port 443
     firewalld:
       port: 443/tcp
       zone: public

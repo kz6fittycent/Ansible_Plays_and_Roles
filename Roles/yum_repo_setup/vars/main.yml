@@ -18,13 +18,23 @@ reposync8base: "reposync --newest-only --download-metadata --downloadcomps -p={{
 crepo8app: "createrepo --update {{ repo_path }}/rhel-8-for-x86_64-appstream-rpms"
 crepo8base: "createrepo --update {{ repo_path }}/rhel-8-for-x86_64-baseos-rpms"
 
-# Use the following if an EPEL repo is deployed for RHEL7/8
+# RHEL9
+reposync9app: "reposync --newest-only --download-metadata --downloadcomps -p={{ repo_path }} --repoid=rhel-9-for-x86_64-appstream-rpms"
+reposync9base: "reposync --newest-only --download-metadata --downloadcomps -p={{ repo_path }} --repoid=rhel-9-for-x86_64-baseos-rpms"
+
+crepo9app: "createrepo --update {{ repo_path }}/rhel-9-for-x86_64-appstream-rpms"
+crepo9base: "createrepo --update {{ repo_path }}/rhel-9-for-x86_64-baseos-rpms"
+
+# Use the following if an EPEL repo is deployed for RHEL7/8/9
 reposync7epel: "reposync --newest-only --download-metadata --downloadcomps --download_path={{ repo_path }}/epel --repoid=epel"
 crepo_epel7: "createrepo -g comps.xml {{ repo_path }}/epel"
 epel7gpg: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7"
 crepo_epel8: "createrepo --update {{ repo_path }}/epel"
 reposync8epel: "reposync --newest-only --download-metadata --downloadcomps -p={{ repo_path }} --repoid=epel"
 epel8gpg: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-8"
+crepo_epel9: "createrepo --update {{ repo_path }}/epel"
+reposync9epel: "reposync --newest-only --download-metadata --downloadcomps -p={{ repo_path }} --repoid=epel"
+epel9gpg: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9"
 
 # Location of SSL certificates to be deployed (if necessary)
 ssl_path: "/etc/ssl/crt" # confirm location
@@ -53,8 +63,7 @@ goodies_list:
   - screen
   - tmux
   - snapd
+  - btop
 # Snaps to install when goodies are enabled
 snap_list:
-  - btop
-  - bashtop
-  - speedtest-cli
+  - clera

@@ -1,0 +1,260 @@
+- hosts: REPOS
+  remote_user: admin
+  become: true
+  become_method: sudo
+  tasks:
+  #NOTE: Set epel_enabled to true to pull in lsb-core for RHEL9
+  #See: https://access.redhat.com/solutions/6960807 
+  vars:
+    epel_enabled: true
+    repo_path: "/var/www/html/RHN"
+    epel_repo_setup: false
+    apache: true
+    server_name: repo
+    server_alias: repo
+    perms: '0755'
+    
+    - name: Run full update
+      package:
+        name: "*"
+        state: latest
+        
+    - name: Install lsb_release
+      package:
+        name: redhat-lsb-core
+        state: present
+        
+    - name: Register lsb_release -is output
+      shell: lsb_release -is
+      register: output
+
+    - name: Install Apache
+      package:
+        name: httpd
+        state: present
+      when:
+        - apache
+
+    - name: Install createrepo
+      package:
+        name: 
+          - createrepo
+          - yum-utils
+        state: present
+                
+    - name: Create repos directory
+      file: 
+        path: '{{ repo_path }}'
+        state: directory
+        
+    - name: Run reposync - RHEL 7 server
+      command: reposync --newest-only --gpgcheck --download-metadata --downloadcomps --download_path='{{ repo_path }}' --repoid=rhel-7-server-rpms
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7"
+        - output.stdout == "RedHatEnterpriseServer"
+      args:
+        warn: no
+                
+    - name: Run createrepo - RHEL 7 server
+      command: createrepo -v -g comps.xml '{{ repo_path }}'/rhel-7-server-rpms
+      when: 
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7"
+        - output.stdout == "RedHatEnterpriseServer"
+      args:
+        warn: no
+        
+    - name: Run reposync - RHEL 7 workstation
+      command: reposync --newest-only --gpgcheck --download-metadata --downloadcomps --download_path='{{ repo_path }}' --repoid=rhel-7-workstation-rpms
+      when: 
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7"
+        - output.stdout == "RedHatEnterpriseWorkstation"
+      args:
+        warn: no
+        
+    - name: Run createrepo - RHEL 7 workstation
+      command: createrepo -v -g comps.xml '{{ repo_path }}'/rhel-7-workstation-rpms
+      when: 
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7"
+        - output.stdout == "RedHatEnterpriseWorkstation"
+      args:
+        warn: no        
+
+    - name: Run reposync RHEL7 - EPEL
+      command: reposync --newest-only --gpgcheck --download-metadata --downloadcomps --download_path='{{ repo_path }}' --repoid=epel
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7"
+        - epel_repo_setup
+      args:
+        warn: no
+                
+    - name: Run createrepo - RHEL 7 - EPEL
+      command: createrepo -v -g comps.xml '{{ repo_path }}'/epel
+      when: 
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7"
+        - epel_repo_setup
+      args:
+        warn: no 
+
+    - name: Run reposync - RHEL 8 - Appstream
+      command: reposync --newest-only --download-metadata --downloadcomps -p='{{ repo_path }}' --repoid=rhel-8-for-x86_64-appstream-rpms
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no
+        
+    - name: Run reposync - RHEL 8 - Base
+      command: reposync --newest-only --download-metadata --downloadcomps -p='{{ repo_path }}' --repoid=rhel-8-for-x86_64-baseos-rpms
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no
+
+    - name: Run createrepo - RHEL 8 Base
+      command: createrepo -v --update '{{ repo_path }}'/rhel-8-for-x86_64-baseos-rpms     
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no    
+
+    - name: Run createrepo - RHEL 8 Appstream
+      command: createrepo -v --update '{{ repo_path }}'/rhel-8-for-x86_64-appstream-rpms     
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no
+       
+    - name: Run reposync - RHEL 9 - Base
+      command: reposync --newest-only --download-metadata --downloadcomps -p='{{ repo_path }}' --repoid=rhel-9-for-x86_64-baseos-rpms
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "9"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no
+        
+    - name: Run reposync - RHEL 9 - Appstream
+      command: reposync --newest-only --download-metadata --downloadcomps -p='{{ repo_path }}' --repoid=rhel-9-for-x86_64-appstream-rpms
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "9"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no        
+
+    - name: Run createrepo - RHEL 9 Appstream
+      command: createrepo -v --update '{{ repo_path }}'/rhel-9-for-x86_64-appstream-rpms     
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "9"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no
+        
+    - name: Run createrepo - RHEL 9 Base
+      command: createrepo -v --update '{{ repo_path }}'/rhel-9-for-x86_64-baseos-rpms     
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "9"
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no
+
+    - name: Run reposync - RHEL 8/9 - EPEL
+      command: reposync --newest-only --download-metadata --downloadcomps -p='{{ repo_path }}' --repoid=epel
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8" or "9"  
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no
+        
+    - name: Run createrepo - RHEL 8/9 EPEL
+      command: createrepo -v --update '{{ repo_path }}'/epel    
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "8" or "9"        
+        - output.stdout == "RedHatEnterprise"
+      args:
+        warn: no 
+        
+  - name: Create sites-available directory
+    file:
+      path: /etc/httpd/sites-available/
+      state: directory
+      owner: apache
+      group: apache
+      mode: '{{ perms }}'
+    when:
+      - apache     
+       
+  - name: Create repo.conf
+    file:
+      path: /etc/httpd/sites-available/repo.conf
+      state: touch
+    when:
+      - apache
+      
+  - name: Add configurations to repo.conf (http)
+    blockinfile:
+      path: /etc/httpd/sites-available/repo.conf
+      content: "<VirtualHost *:80>
+        ServerName {{ servername }}
+        ServerAlias {{ serveralias }}
+        DocumentRoot {{ repo_path }}
+        </VirtualHost>"   
+    when:
+      - apache  
+
+  - name: Copy repo.conf to sites-enabled
+    copy:
+      src: /etc/httpd/sites-available/repo.conf
+      dest: /etc/httpd/sites-enabled/repo.conf
+      remote_src: no
+    when:
+      - apache       
+    
+  - name: Check if "Welcome" page exists
+    stat:
+      path: /etc/httpd/conf.d/welcome.conf
+    register: welcome_result
+    when:
+      - apache      
+    
+  - name: Remove "Welcome" page
+    file:
+      path: /etc/httpd/conf.d/welcome.conf
+      state: absent
+    when:
+      - welcome_result.stat.exists == True       
+      - apache
+
+  - name: Open port 80
+    firewalld:
+      port: 80/tcp
+      zone: public
+      permanent: yes
+      immediate: yes
+      state: enabled      
+    when:
+      - apache  
+            
+  - name: Restart Apache
+    systemd:
+      name: httpd
+      state: restarted  
+    when:
+      - apache  

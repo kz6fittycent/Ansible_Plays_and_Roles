@@ -4,10 +4,9 @@
       name: "*"
       state: latest
 
-  - name: Install needed packages
+  - name: Install needed packages 
     package:
       name: 
-        - redhat-lsb-core
         - httpd
         - createrepo
         - yum-utils  
@@ -15,9 +14,16 @@
         - openssh-clients 
         - python3
         - python3-pip
-        - wget     
+        - wget   
       state: latest
       
+  - name: Install lsb-core - requires EPEL to be enabled!
+    package:
+      name: 
+        - redhat-lsb-core
+    when:
+      - epel_enabled      
+     
   - name: Install mod_ssl if applicable
     package:
       name:

@@ -1,0 +1,7 @@
+- hosts: REPOS
+  remote_user: admin
+  become: true
+  become_method: sudo
+  
+  roles:
+    - { role: yum_repo_setup }

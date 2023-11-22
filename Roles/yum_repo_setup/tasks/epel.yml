@@ -1,5 +1,14 @@
 ---
 
+  - name: Install EPEL for RHEL9
+    shell: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm -yy'
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "9"
+      - epel_enabled
+    args:
+      warn: no
+
   - name: Install EPEL for RHEL8
     shell: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -yy'
     when:
@@ -94,4 +103,31 @@
       - ansible_distribution_major_version == "8"
       - epel_enabled
     args:
-      warn: no           
+      warn: no   
+
+  - name: Run reposync - EPEL for RHEL9
+    command: '{{ reposync9epel }}'  
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "9"
+      - epel_enabled
+    args:
+      warn: no
+            
+  - name: Run createrepo - EPEL for RHEL9
+    command: '{{ crepo_epel9 }}'    
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "9"
+      - epel_enabled
+    args:
+      warn: no      
+      
+  - name: Get GPG key for EPEL for RHEL9
+    shell: 'wget -O {{ repo_path }}/epel/RPM-GPG-KEY-EPEL-9 {{ epel9gpg }}'
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "9"
+      - epel_enabled
+    args:
+      warn: no               

@@ -74,4 +74,40 @@
       - ansible_distribution_major_version == "8"
       - rhel_repo      
     args:
-      warn: no              
+      warn: no    
+      
+  - name: Run reposync - RHEL 9 - Appstream
+    command: '{{ reposync9app }}'  
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "9"
+      - rhel_repo      
+    args:
+      warn: no
+        
+  - name: Run reposync - RHEL 9 - Base
+    command: '{{ reposync9base }}'  
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "9"
+      - rhel_repo
+    args:
+      warn: no
+
+  - name: Run createrepo - RHEL 9 Appstream
+    command: '{{ crepo9app }}'     
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "9"
+      - rhel_repo      
+    args:
+      warn: no
+        
+  - name: Run createrepo - RHEL 9 Base
+    command: '{{ crepo9base }}'    
+    when:
+      - ansible_distribution == "RedHat"
+      - ansible_distribution_major_version == "9"
+      - rhel_repo      
+    args:
+      warn: no                    
