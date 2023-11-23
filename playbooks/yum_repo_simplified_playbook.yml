@@ -2,18 +2,18 @@
   remote_user: admin
   become: true
   become_method: sudo
-  tasks:
   #NOTE: Set epel_enabled to true to pull in lsb-core for RHEL9
   #See: https://access.redhat.com/solutions/6960807 
   vars:
     epel_enabled: true
-    repo_path: "/var/www/html/RHN"
+    repo_path: "/var/www/html/yum"
     epel_repo_setup: false
     apache: true
-    server_name: repo
-    server_alias: repo
+    servername: repo
+    serveralias: repo
     perms: '0755'
-    
+  
+  tasks:    
     - name: Run full update
       package:
         name: "*"
@@ -34,6 +34,13 @@
         state: present
       when:
         - apache
+        
+    - name: Install EPEL
+      package:
+        name: epel-release
+        state: present
+      when:
+        - epel_enabled
 
     - name: Install createrepo
       package:
@@ -179,82 +186,144 @@
         - ansible_distribution == "RedHat"
         - ansible_distribution_major_version == "8" or "9"  
         - output.stdout == "RedHatEnterprise"
+        - epel_repo_setup
       args:
         warn: no
-        
+                
     - name: Run createrepo - RHEL 8/9 EPEL
       command: createrepo -v --update '{{ repo_path }}'/epel    
       when:
         - ansible_distribution == "RedHat"
         - ansible_distribution_major_version == "8" or "9"        
         - output.stdout == "RedHatEnterprise"
+        - epel_repo_setup
       args:
         warn: no 
+
+    - name: Run reposync - CentOS - AppStream
+      command: reposync --newest-only --download-metadata --downloadcomps -p='{{ repo_path }}' --repoid=appstream
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "8" or "9"
+      args:
+        warn: no
         
-  - name: Create sites-available directory
-    file:
-      path: /etc/httpd/sites-available/
-      state: directory
-      owner: apache
-      group: apache
-      mode: '{{ perms }}'
-    when:
-      - apache     
+    - name: Run createrepo - CentOS Appstream
+      command: createrepo -v --update '{{ repo_path }}'/appstream     
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "8" or "9"
+      args:
+        warn: no         
+
+    - name: Run reposync - CentOS - Base
+      command: reposync --newest-only --download-metadata --downloadcomps -p='{{ repo_path }}' --repoid=baseos
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "8" or "9"
+      args:
+        warn: no
+        
+    - name: Run createrepo - CentOS Base
+      command: createrepo -v --update '{{ repo_path }}'/baseos     
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "8" or "9"
+      args:
+        warn: no       
+
+    - name: Run reposync - CentOS 8/9 - EPEL
+      command: reposync --newest-only --download-metadata --downloadcomps -p='{{ repo_path }}' --repoid=epel
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "8" or "9"
+        - epel_repo_setup
+      args:
+        warn: no
+        
+    - name: Run createrepo - CentOS 8/9 EPEL
+      command: createrepo -v --update '{{ repo_path }}'/epel    
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "8" or "9" 
+        - epel_repo_setup       
+      args:
+        warn: no         
+        
+    - name: Create sites-available directory
+      file:
+        path: /etc/httpd/sites-available/
+        state: directory
+        owner: apache
+        group: apache
+        mode: '{{ perms }}'
+      when:
+        - apache   
+
+    - name: Create sites-enabled directory
+      file:
+        path: /etc/httpd/sites-enabled/
+        state: directory
+        owner: apache
+        group: apache
+        mode: '{{ perms }}'
+      when:
+        - apache            
        
-  - name: Create repo.conf
-    file:
-      path: /etc/httpd/sites-available/repo.conf
-      state: touch
-    when:
-      - apache
+    - name: Create repo.conf
+      file:
+        path: /etc/httpd/sites-available/repo.conf
+        state: touch
+      when:
+        - apache
       
-  - name: Add configurations to repo.conf (http)
-    blockinfile:
-      path: /etc/httpd/sites-available/repo.conf
-      content: "<VirtualHost *:80>
-        ServerName {{ servername }}
-        ServerAlias {{ serveralias }}
-        DocumentRoot {{ repo_path }}
-        </VirtualHost>"   
-    when:
-      - apache  
+    - name: Add configurations to repo.conf (http)
+      blockinfile:
+        path: /etc/httpd/sites-available/repo.conf
+        content: "<VirtualHost *:80>
+          ServerName {{ servername }}
+          ServerAlias {{ serveralias }}
+          DocumentRoot {{ repo_path }}
+          </VirtualHost>"   
+      when:
+        - apache  
 
-  - name: Copy repo.conf to sites-enabled
-    copy:
-      src: /etc/httpd/sites-available/repo.conf
-      dest: /etc/httpd/sites-enabled/repo.conf
-      remote_src: no
-    when:
-      - apache       
+    - name: Copy repo.conf to sites-enabled
+      copy:
+        src: /etc/httpd/sites-available/repo.conf
+        dest: /etc/httpd/sites-enabled/repo.conf
+        remote_src: yes
+      when:
+        - apache       
     
-  - name: Check if "Welcome" page exists
-    stat:
-      path: /etc/httpd/conf.d/welcome.conf
-    register: welcome_result
-    when:
-      - apache      
+    - name: Check if "Welcome" page exists
+      stat:
+        path: /etc/httpd/conf.d/welcome.conf
+      register: welcome_result
+      when:
+        - apache      
     
-  - name: Remove "Welcome" page
-    file:
-      path: /etc/httpd/conf.d/welcome.conf
-      state: absent
-    when:
-      - welcome_result.stat.exists == True       
-      - apache
+    - name: Remove "Welcome" page
+      file:
+        path: /etc/httpd/conf.d/welcome.conf
+        state: absent
+      when:
+        - welcome_result.stat.exists == True       
+        - apache
 
-  - name: Open port 80
-    firewalld:
-      port: 80/tcp
-      zone: public
-      permanent: yes
-      immediate: yes
-      state: enabled      
-    when:
-      - apache  
+    - name: Open port 80
+      firewalld:
+        port: 80/tcp
+        zone: public
+        permanent: yes
+        immediate: yes
+        state: enabled      
+      when:
+        - apache  
             
-  - name: Restart Apache
-    systemd:
-      name: httpd
-      state: restarted  
-    when:
-      - apache  
+    - name: Restart Apache
+      systemd:
+        name: httpd
+        state: restarted  
+      when:
+        - apache  
