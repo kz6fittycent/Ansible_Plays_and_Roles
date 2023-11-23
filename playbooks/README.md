@@ -13,3 +13,4 @@
 - [ ] Add stuff for Rocky
 - [ ] Remove RHEL7 stuff once EOL
 - [ ] Make it better with smarter conditionals
+- [ ] Remove CentOS when it's irrelevant
