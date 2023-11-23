@@ -4,10 +4,13 @@
   become_method: sudo
   #NOTE: Set epel_enabled to true to pull in lsb-core for RHEL9
   #See: https://access.redhat.com/solutions/6960807 
+  # It's probably easier to just install epel-release manually for RHEL7
+  # But it's definitely doable via Ansible (see: https://github.com/kz6fittycent/Ansible_Plays_and_Roles/tree/main/Roles/yum_repo_setup)
+  
   vars:
     epel_enabled: true
     repo_path: "/var/www/html/yum"
-    epel_repo_setup: false
+    epel_repo_setup: true
     apache: true
     servername: repo
     serveralias: repo
@@ -19,11 +22,14 @@
         name: "*"
         state: latest
         
-    - name: Install lsb_release
+    - name: Install lsb_release # for potential conditional if needed
       package:
         name: redhat-lsb-core
         state: present
-        
+      when:
+        - ansible_distribution == "RedHat" or "CentOS"
+        - ansible_distribution_major_version == "8" or "9"    
+            
     - name: Register lsb_release -is output
       shell: lsb_release -is
       register: output
@@ -230,7 +236,39 @@
         - ansible_distribution == "CentOS"
         - ansible_distribution_major_version == "8" or "9"
       args:
-        warn: no       
+        warn: no    
+
+    - name: Run reposync - CentOS - Extras
+      command: reposync --newest-only --download-metadata --downloadcomps -p='{{ repo_path }}' --repoid=extras
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "8" or "9"
+      args:
+        warn: no
+        
+    - name: Run createrepo - CentOS Extras
+      command: createrepo -v --update '{{ repo_path }}'/extras     
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "8" or "9"
+      args:
+        warn: no     
+
+    - name: Run reposync - CentOS - Extras Common
+      command: reposync --newest-only --download-metadata --downloadcomps -p='{{ repo_path }}' --repoid=extras-common
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "8" or "9"
+      args:
+        warn: no
+        
+    - name: Run createrepo - CentOS Extras Common
+      command: createrepo -v --update '{{ repo_path }}'/extras-common     
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "8" or "9"
+      args:
+        warn: no                 
 
     - name: Run reposync - CentOS 8/9 - EPEL
       command: reposync --newest-only --download-metadata --downloadcomps -p='{{ repo_path }}' --repoid=epel
